@@ -82,9 +82,9 @@ export function detectKind(text: string): Kind | null {
 const NOT_AN_OPPORTUNITY = new RegExp(
   [
     // English
-    String.raw`\b(how to|tips|visa|guide|list of|top \d+|\d+\+? (new |best |fully[- ]funded )*(scholarships|fellowships|opportunities)|interview questions|cover letter|motivation letter|recommendation letter|\bsop\b|statement of purpose|difference between|vs\.?|explained|what is)\b`,
+    String.raw`\b(best courses|how to|tips|visa|guide|list of|top \d+|\d+\+? (new |best |fully[- ]funded )*(scholarships|fellowships|opportunities)|interview questions|cover letter|motivation letter|recommendation letter|\bsop\b|statement of purpose|difference between|vs\.?|explained|what is)\b`,
     // Arabic: guides, comparisons, roundups ("10 منح ...")
-    String.raw`كيف|نصائح|تأشيرة|قائمة|أفضل \d+|دليل|خطوات|خطاب توصية|رسالة توصية|بيان شخصي|خطاب الدافع|سيرة ذاتية|ما الفرق|الفرق بين|قارن|مقارنة|ما هي|^\d+\s+(منح|منحة|فرص|جامعات)`,
+    String.raw`أفضل دورات|كيف|نصائح|تأشيرة|قائمة|أفضل \d+|دليل|خطوات|خطاب توصية|رسالة توصية|بيان شخصي|خطاب الدافع|سيرة ذاتية|ما الفرق|الفرق بين|قارن|مقارنة|ما هي|^\d+\s+(منح|منحة|فرص|جامعات)`,
     // French
     String.raw`\bcomment\b|conseils|lettre de motivation`,
   ].join("|"),

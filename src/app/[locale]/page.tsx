@@ -10,6 +10,8 @@ import { todayIso } from "@/lib/store/filter";
 import { KINDS, LEVELS, type OpportunityQuery } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+// The first request on a deployment without a database runs the scraper.
+export const maxDuration = 300;
 
 function href(locale: Locale, q: OpportunityQuery) {
   const qs = toSearchParams(q).toString();

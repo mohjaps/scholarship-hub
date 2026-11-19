@@ -1,11 +1,13 @@
-import { databaseUrlVar, getStore } from "@/lib/store";
+import { databaseUrlVar, getStore, storeKind } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 300;
 
 /** Configuration and database status. Reports env var NAMES only, never values. */
 export async function GET() {
   const dbVar = databaseUrlVar();
   const body: Record<string, unknown> = {
+    storage: storeKind(),
     databaseEnvVar: dbVar,
     databaseEnvVarsPresent: Object.keys(process.env).filter((k) => /DATABASE|POSTGRES|PG(HOST|USER|DATABASE)|NEON/.test(k)).sort(),
     cronSecretSet: !!process.env.CRON_SECRET,

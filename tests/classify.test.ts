@@ -79,7 +79,9 @@ describe("detectKind / articles", () => {
     expect(isArticleNotOpportunity("10+ New Scholarships for International Students")).toBe(true);
     expect(isArticleNotOpportunity("ما الفرق بين المنحة الكاملة والمنحة الجزئية؟")).toBe(true);
     expect(isArticleNotOpportunity("8 منح مجانية تقبل السودانيين")).toBe(true);
+    expect(isArticleNotOpportunity("أفضل دورات CEH في قطر 2027")).toBe(true);
     expect(isArticleNotOpportunity("Chevening Scholarships 2027")).toBe(false);
+    expect(isArticleNotOpportunity("منحة الحكومة التركية 2027")).toBe(false);
   });
 });
 

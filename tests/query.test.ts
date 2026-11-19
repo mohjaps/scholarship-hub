@@ -51,6 +51,7 @@ describe("buildWhere", () => {
     const { where, params } = buildWhere({ q: "50%_off'; drop table x", level: "master", source: "s" }, now);
     expect(where).not.toContain("drop table");
     expect(params).toContain("%50\\%\\_off'; drop table x%");
-    expect(where.match(/\$\d+/g)!.length).toBeGreaterThanOrEqual(params.length);
+    // Every parameter must be referenced: Postgres rejects unused untyped params.
+    params.forEach((_, i) => expect(where).toContain("$" + (i + 1)));
   });
 });

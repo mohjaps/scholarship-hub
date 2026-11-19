@@ -9,8 +9,8 @@ export default function ErrorPage({ reset }: { error: Error; reset: () => void }
       <div className="empty">
         <p>
           {ar
-            ? "تعذّر تحميل الفرص الآن. إن كان الموقع جديدًا فتأكد من ربط قاعدة بيانات Neon بالمشروع على Vercel."
-            : "Couldn't load opportunities right now. On a new deployment, make sure a Neon database is connected to the Vercel project."}
+            ? "تعذّر تحميل الفرص الآن. حاول مرة أخرى بعد قليل."
+            : "Couldn't load opportunities right now. Please try again in a moment."}
         </p>
         <p>
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- API route, not a page */}

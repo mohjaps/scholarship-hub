@@ -1,4 +1,4 @@
-import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
+import postgres from "postgres";
 import type { Opportunity, OpportunityQuery } from "../types";
 import { DEFAULT_PAGE_SIZE, STALE_DAYS, todayIso } from "./filter";
 import type { ScrapeRun, Store } from "./types";
@@ -67,7 +67,10 @@ export function buildWhere(query: OpportunityQuery, now = new Date()) {
   const params: unknown[] = [];
   const p = (v: unknown) => `$${params.push(v)}`;
   const where = [`scraped_at >= ${p(new Date(now.getTime() - STALE_DAYS * 86_400_000).toISOString())}`];
-  const today = p(todayIso(now));
+  // Server-generated YYYY-MM-DD (never user input), inlined so the ORDER BY
+  // does not add a parameter the count query would leave unused.
+  const today = `'${todayIso(now)}'`;
+  if (!/^'\d{4}-\d{2}-\d{2}'$/.test(today)) throw new Error("bad date");
   if (!query.includeExpired) where.push(`(deadline IS NULL OR deadline >= ${today}::date)`);
   if (query.level) where.push(`${p(query.level)} = ANY(levels)`);
   if (query.kind) where.push(`kind = ${p(query.kind)}`);
@@ -88,17 +91,42 @@ export function buildWhere(query: OpportunityQuery, now = new Date()) {
   return { where: where.join(" AND "), orderBy, params };
 }
 
+/**
+ * Drop query parameters: postgres.js forwards unknown ones (e.g. Supabase's
+ * `supa=base-pooler.x`, `pgbouncer=true`) to the server, which rejects them.
+ * SSL is configured explicitly instead of via `sslmode`.
+ */
+export function stripQuery(url: string): string {
+  const i = url.indexOf("?");
+  return i === -1 ? url : url.slice(0, i);
+}
+
 export class PostgresStore implements Store {
-  private sql: NeonQueryFunction<false, false>;
+  private sql: postgres.Sql;
   private ready: Promise<void> | null = null;
 
-  constructor(url: string) {
-    this.sql = neon(url);
+  constructor(rawUrl: string) {
+    const url = stripQuery(rawUrl);
+    const local = /@(localhost|127\.0\.0\.1)[:/]/.test(url) || /host=\/|host=localhost/.test(url);
+    this.sql = postgres(url, {
+      // Serverless: one connection per instance. Supabase's transaction pooler
+      // (port 6543) does not support prepared statements.
+      max: 1,
+      prepare: false,
+      ssl: local ? false : "require",
+      idle_timeout: 20,
+      connect_timeout: 15,
+      onnotice: () => {},
+    });
+  }
+
+  private run(text: string, params: unknown[] = []): Promise<Row[]> {
+    return this.sql.unsafe(text, params as postgres.ParameterOrJSON<never>[]) as unknown as Promise<Row[]>;
   }
 
   private ensureSchema() {
     this.ready ??= (async () => {
-      for (const stmt of SCHEMA) await this.sql.query(stmt);
+      for (const stmt of SCHEMA) await this.run(stmt);
     })().catch((e) => {
       this.ready = null;
       throw e;
@@ -112,13 +140,13 @@ export class PostgresStore implements Store {
     // One round trip: send the batch as JSON and expand it server-side.
     for (let i = 0; i < items.length; i += 500) {
       const batch = items.slice(i, i + 500);
-      await this.sql.query(
+      await this.run(
         `INSERT INTO opportunities (id, source_id, source_name, url, title, summary, title_ar, summary_ar, lang, kind,
            levels, funding, palestinian, deadline, published_at, scraped_at)
          SELECT x.id, x."sourceId", x."sourceName", x.url, x.title, x.summary, x."titleAr", x."summaryAr", x.lang, x.kind,
            ARRAY(SELECT jsonb_array_elements_text(x.levels)), x.funding, x.palestinian, x.deadline::date,
            x."publishedAt"::timestamptz, x."scrapedAt"::timestamptz
-         FROM jsonb_to_recordset($1::jsonb) AS x(
+         FROM jsonb_to_recordset($1::text::jsonb) AS x(
            id text, "sourceId" text, "sourceName" text, url text, title text, summary text, "titleAr" text,
            "summaryAr" text, lang text, kind text, levels jsonb, funding text, palestinian text, deadline text,
            "publishedAt" text, "scrapedAt" text)
@@ -139,15 +167,15 @@ export class PostgresStore implements Store {
     const pageSize = query.pageSize ?? DEFAULT_PAGE_SIZE;
     const { where, orderBy, params } = buildWhere(query);
     const [rows, count] = await Promise.all([
-      this.sql.query(
+      this.run(
         `SELECT ${COLUMNS} FROM opportunities WHERE ${where} ORDER BY ${orderBy} LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}`,
         params,
       ),
-      this.sql.query(`SELECT count(*)::int AS n FROM opportunities WHERE ${where}`, params),
+      this.run(`SELECT count(*)::int AS n FROM opportunities WHERE ${where}`, params),
     ]);
     return {
-      items: (rows as Row[]).map(rowToOpportunity),
-      total: ((count as Row[])[0]?.n as number) ?? 0,
+      items: rows.map(rowToOpportunity),
+      total: (count[0]?.n as number) ?? 0,
       page,
       pageSize,
     };
@@ -155,24 +183,24 @@ export class PostgresStore implements Store {
 
   async get(id: string) {
     await this.ensureSchema();
-    const rows = (await this.sql.query(`SELECT ${COLUMNS} FROM opportunities WHERE id = $1`, [id])) as Row[];
+    const rows = await this.run(`SELECT ${COLUMNS} FROM opportunities WHERE id = $1`, [id]);
     return rows[0] ? rowToOpportunity(rows[0]) : null;
   }
 
   async recordRun(run: ScrapeRun) {
     await this.ensureSchema();
-    await this.sql.query(
-      `INSERT INTO scrape_runs (started_at, finished_at, total, results) VALUES ($1, $2, $3, $4::jsonb)`,
+    await this.run(
+      `INSERT INTO scrape_runs (started_at, finished_at, total, results) VALUES ($1::timestamptz, $2::timestamptz, $3::int, $4::text::jsonb)`,
       [run.startedAt, run.finishedAt, run.total, JSON.stringify(run.results)],
     );
-    await this.sql.query(`DELETE FROM scrape_runs WHERE id NOT IN (SELECT id FROM scrape_runs ORDER BY id DESC LIMIT 200)`);
+    await this.run(`DELETE FROM scrape_runs WHERE id NOT IN (SELECT id FROM scrape_runs ORDER BY id DESC LIMIT 200)`);
   }
 
   async lastRun() {
     await this.ensureSchema();
-    const rows = (await this.sql.query(
+    const rows = await this.run(
       `SELECT started_at, finished_at, total, results FROM scrape_runs ORDER BY id DESC LIMIT 1`,
-    )) as Row[];
+    );
     const r = rows[0];
     if (!r) return null;
     return {

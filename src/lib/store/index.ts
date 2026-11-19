@@ -1,3 +1,4 @@
+import { CachedScrapeStore } from "./cached";
 import { FileStore } from "./file";
 import { PostgresStore } from "./postgres";
 import type { Store } from "./types";
@@ -18,19 +19,20 @@ export function databaseUrlVar(): string | null {
   return prefixed[0] ?? null;
 }
 
-export class MissingDatabaseError extends Error {
-  constructor() {
-    super("No Postgres connection string found (DATABASE_URL / POSTGRES_URL). Connect a Neon database to the Vercel project and redeploy.");
-  }
-}
-
 let store: Store | null = null;
 
-/** Postgres when a connection string is set, else a local JSON file (dev only). */
+export function storeKind(): "postgres" | "cache" | "file" {
+  return databaseUrlVar() ? "postgres" : process.env.VERCEL ? "cache" : "file";
+}
+
+/**
+ * Postgres when a connection string is set. Without one: on Vercel, scrape on
+ * demand and cache the result; locally, a JSON file filled by `npm run scrape`.
+ */
 export function getStore(): Store {
   if (store) return store;
   const name = databaseUrlVar();
   if (name) return (store = new PostgresStore(process.env[name]!));
-  if (process.env.VERCEL) throw new MissingDatabaseError();
+  if (process.env.VERCEL) return (store = new CachedScrapeStore());
   return (store = new FileStore());
 }

@@ -28,12 +28,21 @@ A Next.js (TypeScript) website that collects **bachelor's, master's and PhD scho
 ## Deploy to Vercel
 
 1. Push this repo to GitHub, then go to **vercel.com → Add New → Project** and import it. The framework is detected as Next.js.
-2. **Add a database.** In the project, open **Storage → Create → Neon (Postgres)** and connect it to the project. This sets `DATABASE_URL` for you. Tables are created automatically on the first request.
-3. **Add `CRON_SECRET`.** In **Settings → Environment Variables**, set it to a long random string, for example the output of `openssl rand -hex 32`. Vercel Cron sends it automatically, and without it the cron endpoint refuses every request in production.
-4. Deploy. To fill the database straight away instead of waiting for the daily cron:
+2. Deploy. **The site works with no database**: the first visitor triggers a scrape (about 15 seconds), and the result is cached in Vercel's data cache for 6 hours. This mode keeps only the latest scrape.
+3. **Optional: add Supabase** to store history.
+   - **Option A, the Vercel integration:** in the Vercel project, open **Storage → Create → Supabase** (or go to **Integrations → Supabase**) and connect it to the project with Production ticked. It sets `POSTGRES_URL` for you.
+   - **Option B, manually:** in Supabase, open **Connect → Connection string → Transaction pooler**, port `6543`. It looks like
+     `postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres`.
+     Add it in Vercel under **Settings → Environment Variables** as `DATABASE_URL`.
+
+   Then **redeploy**, because variables only apply to new deployments. Tables are created automatically.
+   Any Postgres works, including Neon and Supabase. The app reads `DATABASE_URL`, `POSTGRES_URL`, or a prefixed `<PREFIX>_POSTGRES_URL`.
+4. **Add `CRON_SECRET`.** In **Settings → Environment Variables**, set it to a long random string, for example the output of `openssl rand -hex 32`. Vercel Cron sends it automatically, and without it the cron endpoint refuses every request in production.
+5. To fill the database straight away instead of waiting for the daily cron:
    ```bash
    curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>.vercel.app/api/cron/scrape
    ```
+6. Check the setup at `/api/health`. It reports the storage mode, the item count and the last run, and shows variable names only, never values.
 
 The Hobby plan runs cron jobs once a day, which is what `vercel.json` uses. A full scrape normally takes 10–60 seconds, and the route allows up to 300 seconds.
 
@@ -67,7 +76,7 @@ src/
   i18n/dictionaries.ts Arabic / English strings
   lib/classify.ts      level / type / deadline / eligibility detection
   lib/scrapers/        sources + normalization
-  lib/store/           Postgres (Neon) and local JSON stores
+  lib/store/           Postgres (Supabase/Neon), Vercel data-cache and local JSON stores
   proxy.ts             / → /ar or /en
 tests/                 vitest unit tests
 ```
