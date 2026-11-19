@@ -8,7 +8,13 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: Request) {
   const query = parseQuery(new URL(request.url).searchParams);
-  const result = await getStore().query(query);
+  let result;
+  try {
+    result = await getStore().query(query);
+  } catch (e) {
+    console.error(e);
+    return Response.json({ error: "Database unavailable. See /api/health." }, { status: 503 });
+  }
   return Response.json(result, {
     headers: { "cache-control": "public, s-maxage=600, stale-while-revalidate=3600" },
   });
