@@ -19,7 +19,9 @@ const cachedScrapeInner = unstable_cache(
     };
     return { items, run };
   },
-  ["scrape-all-v1"],
+  // Vercel's data cache outlives deployments: key it on the commit so a new
+  // deploy (new sources or classifier rules) never serves an older scrape.
+  ["scrape-all", process.env.VERCEL_GIT_COMMIT_SHA ?? "local"],
   { revalidate: REVALIDATE_SECONDS, tags: ["scrape"] },
 );
 
