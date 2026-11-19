@@ -81,6 +81,12 @@ describe("detectKind / articles", () => {
     expect(isArticleNotOpportunity("8 منح مجانية تقبل السودانيين")).toBe(true);
     expect(isArticleNotOpportunity("أفضل دورات CEH في قطر 2027")).toBe(true);
     expect(isArticleNotOpportunity("Chevening Scholarships 2027")).toBe(false);
+    // SEO tails on real scholarships must not hide them
+    expect(isArticleNotOpportunity("University of Montana Graduate Scholarship 2027: Full Guide & Deadlines")).toBe(false);
+    expect(isArticleNotOpportunity("University of Twente Scholarship 2027 in Netherlands | Step-by-Step Guide")).toBe(false);
+    expect(isArticleNotOpportunity("Aalto University Scholarship in Finland 2027 (Fully Funded) | How to Apply")).toBe(false);
+    expect(isArticleNotOpportunity("How to apply for Chevening")).toBe(true);
+    expect(isArticleNotOpportunity("Complete Guide to Scholarships in Germany")).toBe(true);
     expect(isArticleNotOpportunity("منحة الحكومة التركية 2027")).toBe(false);
   });
 });

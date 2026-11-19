@@ -57,7 +57,7 @@ export function cleanExcerpt(html: string): string {
 
 export function wpPostsUrl(cfg: WordPressConfig): string {
   const params = new URLSearchParams({
-    per_page: String(cfg.perPage ?? 40),
+    per_page: String(cfg.perPage ?? 100),
     orderby: "date",
     order: "desc",
   });

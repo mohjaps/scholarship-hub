@@ -35,7 +35,7 @@ export const SOURCES: Source[] = [
     id: "opportunitydesk", name: "Opportunity Desk", region: "global",
     homepage: "https://opportunitydesk.org/", base: "https://opportunitydesk.org",
     // Scholarships, Fellowships, Undergraduate, Masters, PhD, Conferences, Training
-    categories: [6, 24, 1280, 1281, 1282, 10, 75], perPage: 60,
+    categories: [6, 24, 1280, 1281, 1282, 10, 75],
   }),
   wordpressSource({
     id: "opportunitiescorners", name: "Opportunities Corners", region: "global",
@@ -61,6 +61,12 @@ export const SOURCES: Source[] = [
   wordpressSource({
     id: "fullyscholarships", name: "Fully Scholarships", region: "global",
     homepage: "https://fullyscholarships.com/", base: "https://fullyscholarships.com",
+  }),
+  wordpressSource({
+    id: "montessoriline", name: "Montessori Line", region: "global",
+    homepage: "https://montessoriline.com/", base: "https://montessoriline.com",
+    // Fully funded scholarships, Currently open, Fellowships, Scholarship news & alerts
+    categories: [48, 73, 60, 71, 70], perPage: 100,
   }),
   wordpressSource({
     id: "youthop", name: "Youth Opportunities", region: "global",

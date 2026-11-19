@@ -156,6 +156,15 @@ const PROGRAMMES: Programme[] = [
     aboutAr: "يحصل جميع المقبولين في الماجستير والدكتوراه على رسوم كاملة وراتب شهري وسكن وتأمين طبي.",
   },
   {
+    url: "https://www.studyinfinland.fi/scholarships",
+    en: "Finland Scholarships (Finnish universities)", ar: "منح فنلندا (الجامعات الفنلندية)",
+    levels: ["bachelor", "master"], palestinian: "open", funding: "partial",
+    windowEn: "Applied for with university admission. Joint application rounds usually run in January.",
+    windowAr: "يُقدَّم عليها مع طلب القبول الجامعي، والتقديم المشترك عادةً في يناير.",
+    aboutEn: "Finnish universities offer tuition-fee scholarships (often 50–100%) to non-EU students, and some add a living allowance.",
+    aboutAr: "تقدم الجامعات الفنلندية منحًا لرسوم الدراسة (غالبًا 50–100%) لطلاب من خارج الاتحاد الأوروبي، وبعضها يضيف بدل معيشة.",
+  },
+  {
     url: "https://www.studyinnl.org/finances/holland-scholarship",
     en: "Holland Scholarship (Netherlands)", ar: "منحة هولندا (Holland Scholarship)",
     levels: ["bachelor", "master"], palestinian: "open", funding: "partial",

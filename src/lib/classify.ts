@@ -91,8 +91,13 @@ const NOT_AN_OPPORTUNITY = new RegExp(
   "i",
 );
 
+/**
+ * Judge only the headline before " | " or ": " — aggregators append SEO tails
+ * like "| How to Apply" or ": Full Guide & Deadlines" to real scholarships.
+ */
 export function isArticleNotOpportunity(title: string): boolean {
-  return NOT_AN_OPPORTUNITY.test(title);
+  const head = title.split(/\s+[|–—]\s+|:\s+/)[0] || title;
+  return NOT_AN_OPPORTUNITY.test(head);
 }
 
 // ---------------------------------------------------------------- funding

@@ -11,9 +11,9 @@ A Next.js (TypeScript) website that collects **bachelor's, master's and PhD scho
   | --- | --- | --- |
   | Palestinian | wenak.ps (scholarships listed for Palestinian students) | HTML (cheerio) |
   | Arabic | Persmind, StudyShoot | WordPress REST API |
-  | Global | Scholars4Dev, Opportunity Desk, Opportunities Corners, Greatyop, Scholarships Corner, Scholarship Region, Fully Scholarships, Youth Opportunities | WordPress REST API |
+  | Global | Scholars4Dev, Opportunity Desk, Opportunities Corners, Greatyop, Scholarships Corner, Scholarship Region, Fully Scholarships, Montessori Line, Youth Opportunities | WordPress REST API (latest 100 posts each) |
   | Official | Erasmus Mundus catalogue (EACEA) | HTML (cheerio) |
-  | Annual | 21 major programmes that open every year, with their usual window (`src/lib/scrapers/official.ts`) | Curated list |
+  | Annual | 22 major programmes that open every year, with their usual window (`src/lib/scrapers/official.ts`) | Curated list |
 - **Built for Palestinian students**: calls limited to other nationalities or regions ("…for Nigerian students", "Africa … Fellowship", "منح للسوريين", Commonwealth-only) are dropped. Among items without a deadline, Palestine-specific ones are listed first.
 - **Annual scholarships tab** (`?annual=1`): Chevening, Fulbright, Rhodes (Syria/Jordan/Lebanon/Palestine), IsDB, Said Foundation, Taawon, Türkiye Bursları, DAAD, Erasmus Mundus, Gates Cambridge, Clarendon, Knight-Hennessy, Eiffel, KAUST, Stipendium Hungaricum, CSC, GKS, MEXT and others.
 - **Sync** every 12 hours (two Vercel cron jobs), plus a **Sync now** button with a 30-minute cooldown.
