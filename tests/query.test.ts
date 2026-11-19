@@ -55,3 +55,18 @@ describe("buildWhere", () => {
     params.forEach((_, i) => expect(where).toContain("$" + (i + 1)));
   });
 });
+
+import { pageList } from "@/lib/pagination";
+
+describe("pageList", () => {
+  it("elides long ranges around the current page", () => {
+    expect(pageList(6, 20)).toEqual([1, "gap", 5, 6, 7, "gap", 20]);
+    expect(pageList(1, 20)).toEqual([1, 2, "gap", 20]);
+    expect(pageList(20, 20)).toEqual([1, "gap", 19, 20]);
+  });
+  it("fills single-page gaps and handles short lists", () => {
+    expect(pageList(3, 5)).toEqual([1, 2, 3, 4, 5]);
+    expect(pageList(1, 1)).toEqual([1]);
+    expect(pageList(2, 3)).toEqual([1, 2, 3]);
+  });
+});

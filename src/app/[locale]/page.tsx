@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FilterForm } from "@/components/FilterForm";
 import { OpportunityCard } from "@/components/OpportunityCard";
+import { Pagination } from "@/components/Pagination";
+import { SyncButton } from "@/components/SyncButton";
 import { dictionaries, isLocale, type Locale } from "@/i18n/dictionaries";
 import { parseQuery, toSearchParams } from "@/lib/params";
 import { SOURCES } from "@/lib/scrapers";
@@ -139,9 +141,26 @@ export default async function Home({
       </header>
 
       <main id="results" className="wrap">
-        <p className="count" role="status">
-          {t.results(result.total)}
-        </p>
+        <div className="results-bar">
+          <p className="count" role="status">
+            {t.results(result.total)}
+            {lastRun && (
+              <span className="updated">
+                {" · "}
+                {t.lastUpdated}{" "}
+                <time dateTime={lastRun.finishedAt}>
+                  {new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-GB", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                    timeZone: "UTC",
+                  }).format(new Date(lastRun.finishedAt))}{" "}
+                  UTC
+                </time>
+              </span>
+            )}
+          </p>
+          <SyncButton locale={locale} />
+        </div>
 
         {result.items.length === 0 ? (
           <p className="empty">{lastRun ? t.empty : t.emptyNoData}</p>
@@ -153,25 +172,12 @@ export default async function Home({
           </div>
         )}
 
-        {pages > 1 && (
-          <nav className="pager" aria-label={t.page(result.page, pages)}>
-            {result.page > 1 ? (
-              <Link href={href(locale, { ...query, page: result.page - 1 })} rel="prev">
-                {t.prev}
-              </Link>
-            ) : (
-              <span />
-            )}
-            <span>{t.page(result.page, pages)}</span>
-            {result.page < pages ? (
-              <Link href={href(locale, { ...query, page: result.page + 1 })} rel="next">
-                {t.next}
-              </Link>
-            ) : (
-              <span />
-            )}
-          </nav>
-        )}
+        <Pagination
+          page={result.page}
+          pages={pages}
+          t={t}
+          hrefFor={(p) => href(locale, { ...query, page: p })}
+        />
       </main>
 
       <footer className="footer">
@@ -196,7 +202,7 @@ export default async function Home({
               <span key={s.id}>
                 {i > 0 && " · "}
                 <a href={s.homepage} target="_blank" rel="noopener noreferrer">
-                  {s.name}
+                  <bdi>{s.name}</bdi>
                 </a>
               </span>
             ))}

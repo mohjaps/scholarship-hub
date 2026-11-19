@@ -5,7 +5,7 @@ import { applyQuery } from "./filter";
 import type { ScrapeRun, Store } from "./types";
 
 /** How long a scrape is reused before the next visitor triggers a fresh one. */
-const REVALIDATE_SECONDS = 6 * 60 * 60;
+const REVALIDATE_SECONDS = 12 * 60 * 60;
 
 const cachedScrapeInner = unstable_cache(
   async () => {
