@@ -55,6 +55,8 @@ export interface OpportunityQuery {
   palestinian?: "explicit" | "eligible";
   lang?: ContentLang;
   source?: string;
+  /** Only the curated annual programmes. */
+  annual?: boolean;
   includeExpired?: boolean;
   page?: number;
   pageSize?: number;

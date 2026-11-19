@@ -1,6 +1,6 @@
 import postgres from "postgres";
 import type { Opportunity, OpportunityQuery } from "../types";
-import { DEFAULT_PAGE_SIZE, STALE_DAYS, todayIso } from "./filter";
+import { ANNUAL_SOURCE_ID, DEFAULT_PAGE_SIZE, STALE_DAYS, todayIso } from "./filter";
 import type { ScrapeRun, Store } from "./types";
 
 const SCHEMA = [
@@ -76,6 +76,7 @@ export function buildWhere(query: OpportunityQuery, now = new Date()) {
   if (query.kind) where.push(`kind = ${p(query.kind)}`);
   if (query.lang) where.push(`lang = ${p(query.lang)}`);
   if (query.source) where.push(`source_id = ${p(query.source)}`);
+  if (query.annual) where.push(`source_id = ${p(ANNUAL_SOURCE_ID)}`);
   if (query.palestinian === "explicit") where.push(`palestinian = 'explicit'`);
   if (query.palestinian === "eligible") where.push(`palestinian <> 'unknown'`);
   if (query.q?.trim()) {
@@ -87,6 +88,7 @@ export function buildWhere(query: OpportunityQuery, now = new Date()) {
   const orderBy = `CASE WHEN deadline IS NULL THEN 1 WHEN deadline >= ${today}::date THEN 0 ELSE 2 END,
     CASE WHEN deadline >= ${today}::date THEN deadline END ASC,
     CASE WHEN deadline < ${today}::date THEN deadline END DESC,
+    CASE WHEN deadline IS NULL THEN (CASE palestinian WHEN 'explicit' THEN 0 WHEN 'open' THEN 1 ELSE 2 END) END,
     published_at DESC NULLS LAST, id`;
   return { where: where.join(" AND "), orderBy, params };
 }

@@ -36,7 +36,7 @@ export default async function Home({
   const pages = Math.max(1, Math.ceil(result.total / result.pageSize));
   const today = todayIso();
   const otherLocale: Locale = locale === "ar" ? "en" : "ar";
-  const hasFilters = !!(query.q || query.level || query.kind || query.palestinian || query.lang || query.source || query.includeExpired);
+  const hasFilters = !!(query.q || query.level || query.kind || query.palestinian || query.lang || query.source || query.annual || query.includeExpired);
 
   return (
     <>
@@ -67,10 +67,19 @@ export default async function Home({
                 {t.levels[l]}
               </Link>
             ))}
+            <Link
+              href={href(locale, { ...query, annual: !query.annual, page: 1 })}
+              aria-current={query.annual ? "page" : undefined}
+              className="annual-tab"
+            >
+              ★ {t.annual}
+            </Link>
           </nav>
+          {query.annual && <p className="annual-note">{t.annualNote}</p>}
 
           <FilterForm action={`/${locale}`}>
             {query.level && <input type="hidden" name="level" value={query.level} />}
+            {query.annual && <input type="hidden" name="annual" value="1" />}
             <div className="search-row">
               <input
                 type="search"
@@ -111,17 +120,6 @@ export default async function Home({
                   {(["ar", "en", "fr"] as const).map((l) => (
                     <option key={l} value={l}>
                       {t.languageName[l]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span className="sr-only">{t.anySource}</span>
-                <select name="source" defaultValue={query.source ?? ""}>
-                  <option value="">{t.anySource}</option>
-                  {SOURCES.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
                     </option>
                   ))}
                 </select>

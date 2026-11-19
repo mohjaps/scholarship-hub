@@ -1,6 +1,10 @@
 import type { Opportunity, OpportunityQuery, QueryResult } from "../types";
 
+/** sourceId of the curated annual programmes (see scrapers/official.ts). */
+export const ANNUAL_SOURCE_ID = "official";
+
 export const DEFAULT_PAGE_SIZE = 24;
+const PALESTINIAN_RANK = { explicit: 0, open: 1, unknown: 2 } as const;
 /** Items not seen by a scrape for this long are hidden (the source removed them). */
 export const STALE_DAYS = 120;
 
@@ -23,6 +27,7 @@ export function applyQuery(all: Opportunity[], query: OpportunityQuery, now = ne
     if (query.kind && o.kind !== query.kind) return false;
     if (query.lang && o.lang !== query.lang) return false;
     if (query.source && o.sourceId !== query.source) return false;
+    if (query.annual && o.sourceId !== ANNUAL_SOURCE_ID) return false;
     if (query.palestinian === "explicit" && o.palestinian !== "explicit") return false;
     if (query.palestinian === "eligible" && o.palestinian === "unknown") return false;
     if (q) {
@@ -53,6 +58,9 @@ export function compareOpportunities(today: string) {
     if (ba !== bb) return ba - bb;
     if (ba === 0) return a.deadline!.localeCompare(b.deadline!);
     if (ba === 2) return b.deadline!.localeCompare(a.deadline!);
-    return (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "");
+    // No deadline: Palestine-specific first, then open to all, then newest.
+    const pr = PALESTINIAN_RANK[a.palestinian] - PALESTINIAN_RANK[b.palestinian];
+    if (pr !== 0) return pr;
+    return (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "") || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   };
 }

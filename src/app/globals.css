@@ -82,6 +82,11 @@ a { color: inherit; }
   background: color-mix(in srgb, var(--hero-text) 10%, transparent);
 }
 .level-tabs a[aria-current="page"] { background: var(--hero-text); color: var(--hero); }
+.level-tabs .annual-tab { margin-inline-start: auto; background: color-mix(in srgb, #f3c969 22%, transparent); color: #fbe3a6; }
+.level-tabs .annual-tab[aria-current="page"] { background: #f3c969; color: #3a2a00; }
+.annual-note { margin: -4px 0 14px; color: var(--hero-muted); font-size: 0.92rem; max-width: 70ch; }
+.annual-label { color: var(--accent); }
+@media (max-width: 560px) { .level-tabs .annual-tab { margin-inline-start: 0; } }
 
 .filters { display: grid; gap: 10px; }
 .search-row { display: flex; gap: 8px; }

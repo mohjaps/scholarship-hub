@@ -7,6 +7,7 @@ import {
   detectLevels,
   detectPalestinian,
   isArticleNotOpportunity,
+  isRestrictedToOthers,
   truncate,
 } from "../classify";
 import type { Kind, Level, Opportunity } from "../types";
@@ -54,6 +55,8 @@ export function normalize(
 ): Opportunity | null {
   const title = raw.title.trim();
   if (!title || isArticleNotOpportunity(title)) return null;
+  // The site is for Palestinian students: skip calls limited to other nationalities.
+  if (isRestrictedToOthers(title)) return null;
 
   const hints = (raw.hints ?? []).join(" ");
   // The title is the best signal; category names only break ties.

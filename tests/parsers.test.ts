@@ -69,3 +69,20 @@ describe("WordPress source", () => {
     expect(cleanExcerpt("<p>Apply now. Read more &raquo;</p>")).toBe("Apply now.");
   });
 });
+
+describe("customised WordPress APIs (youthop)", () => {
+  it("handles string titles, missing links and unix deadlines", () => {
+    const raw = wpPostToRaw(
+      { id: "59747", title: "Global Thinkers Forum Mentoring Programme 2027", deadline: "1795478340", category: { name: "Fellowships" }, region: "Online" },
+      new Map(),
+      "https://www.youthop.com",
+    );
+    expect(raw).toMatchObject({
+      url: "https://www.youthop.com/?p=59747",
+      title: "Global Thinkers Forum Mentoring Programme 2027",
+      deadline: "2026-11-23",
+      hints: ["Fellowships"],
+      publishedAt: null,
+    });
+  });
+});

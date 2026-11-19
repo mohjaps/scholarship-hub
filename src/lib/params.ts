@@ -21,6 +21,7 @@ export function parseQuery(params: Params): OpportunityQuery {
     palestinian: oneOf(read(params, "palestinian"), ["explicit", "eligible"] as const),
     lang: oneOf<ContentLang>(read(params, "lang"), ["ar", "en", "fr"]),
     source: read(params, "source")?.slice(0, 50),
+    annual: read(params, "annual") === "1",
     includeExpired: read(params, "expired") === "1",
     page: Number.isInteger(page) && page > 0 ? Math.min(page, 1000) : 1,
   };
@@ -35,6 +36,7 @@ export function toSearchParams(q: OpportunityQuery): URLSearchParams {
   if (q.palestinian) sp.set("palestinian", q.palestinian);
   if (q.lang) sp.set("lang", q.lang);
   if (q.source) sp.set("source", q.source);
+  if (q.annual) sp.set("annual", "1");
   if (q.includeExpired) sp.set("expired", "1");
   if (q.page && q.page > 1) sp.set("page", String(q.page));
   return sp;

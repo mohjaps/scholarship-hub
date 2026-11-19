@@ -70,12 +70,16 @@ export function OpportunityCard({
               <time dateTime={item.deadline}>{formatDate(item.deadline, locale)}</time>
               <span className="deadline-left"> · {days! < 0 ? t.expired : t.daysLeft(days!)}</span>
             </>
+          ) : item.sourceId === "official" ? (
+            <span className="deadline-label annual-label">★ {t.annualBadge}</span>
           ) : (
             <span className="deadline-label">{t.noDeadline}</span>
           )}
         </div>
         <div className="card-meta">
-          <span className="source">{item.sourceName}</span>
+          <span className="source">
+            <bdi>{item.sourceId === "official" ? t.annual : item.sourceName}</bdi>
+          </span>
           <a className="apply" href={item.url} target="_blank" rel="noopener noreferrer">
             {t.viewDetails}
             <span aria-hidden="true">{locale === "ar" ? " ←" : " →"}</span>

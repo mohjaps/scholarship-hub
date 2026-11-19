@@ -111,6 +111,27 @@ const PALESTINE_EXPLICIT = /palestin|\bgaza\b|west bank|فلسطين|فلسطي�
 const OPEN_TO_ALL =
   /all nationalities|all countries|any country|any nationality|every country|worldwide|around the world|all over the world|international (students|applicants|candidates)|developing countries|low- and middle-income countries|arab (countries|world|region|students)|\bmena\b|middle east|global south|جميع الجنسيات|كل الجنسيات|جميع دول العالم|جميع الدول|الطلاب الدوليين|للطلاب الدوليين|الطلاب العرب|الدول العربية|الدول النامية|toutes (les )?nationalités|tous les pays|étudiants internationaux|pays en développement/i;
 
+/** Nationalities/regions that, named in a title, usually mean "only for them". */
+const OTHER_GROUPS = String.raw`africa|africans?|nigeria|nigerians?|kenya|kenyans?|ghana|ghanaians?|uganda|ugandans?|tanzanian?s?|rwandans?|zambians?|zimbabweans?|ethiopians?|cameroonians?|south africans?|indians?|pakistanis?|bangladeshis?|nepalese|sri lankans?|filipinos?|indonesians?|latin americans?|caribbean|pacific islanders?|us citizens|u\.s\. citizens|american (students|citizens)|canadian (students|citizens)|eu (students|citizens)|european students|uk (students|residents)|commonwealth|asean`;
+const RESTRICTED_EN = new RegExp(String.raw`\b(${OTHER_GROUPS})\b`, "i");
+const RESTRICTED_AR =
+  /لل(سوريين|سودانيين|مصريين|يمنيين|عراقيين|أردنيين|اردنيين|لبنانيين|مغاربة|جزائريين|تونسيين|ليبيين|سعوديين|إماراتيين|كويتيين|قطريين|عمانيين|بحرينيين|موريتانيين|نيجيريين|أفارقة)|(تقبل|خاصة ب|مخصصة ل)\s*(ال)?(سوريين|سودانيين|مصريين|يمنيين|عراقيين|أفارقة)/;
+const INCLUSIVE =
+  /international|worldwide|global|all (countries|nationalities)|developing countries|arab|mena|middle east|palestin|gaza|فلسطين|الفلسطينيين|غزة|جميع الجنسيات|الدوليين|العرب/i;
+
+/**
+ * True when the title says the call is for a specific other nationality or
+ * region (e.g. "… for Nigerian students", "Africa … Fellowship", "منح للسوريين")
+ * and does not also say it is international / Arab / Palestinian.
+ */
+export function isRestrictedToOthers(title: string): boolean {
+  if (/palestin|gaza|فلسطين|الفلسطينيين|غزة/i.test(title)) return false;
+  // Palestine is not a Commonwealth country, whatever else the title says.
+  if (/commonwealth/i.test(title)) return true;
+  if (INCLUSIVE.test(title)) return false;
+  return RESTRICTED_EN.test(title) || RESTRICTED_AR.test(title);
+}
+
 export function detectPalestinian(text: string): PalestinianEligibility {
   if (PALESTINE_EXPLICIT.test(text)) return "explicit";
   if (OPEN_TO_ALL.test(text)) return "open";

@@ -3,6 +3,7 @@ import { erasmusSource } from "./erasmus";
 import { normalize } from "./normalize";
 import { officialSource } from "./official";
 import type { Source } from "./source";
+import { wenakSource } from "./wenak";
 import { wordpressSource } from "./wordpress";
 
 /**
@@ -10,7 +11,8 @@ import { wordpressSource } from "./wordpress";
  * /wp-json/wp/v2/categories; if a site renames them, update the ids here.
  */
 export const SOURCES: Source[] = [
-  // ---- Arabic
+  // ---- Palestinian / Arabic
+  wenakSource,
   wordpressSource({
     id: "persmind", name: "Persmind (برسمايند)", region: "arab",
     homepage: "https://persmind.com/", base: "https://persmind.com",
@@ -42,24 +44,31 @@ export const SOURCES: Source[] = [
     categories: [64, 905, 942, 66, 61, 1058],
   }),
   wordpressSource({
-    id: "afterschoolafrica", name: "After School Africa", region: "global",
-    homepage: "https://www.afterschoolafrica.com/", base: "https://www.afterschoolafrica.com",
-    // Scholarships, Masters, PhD, Undergraduate, MENA, Conferences, Short courses
-    categories: [13, 55, 68, 117, 2784, 2323, 2888],
-  }),
-  wordpressSource({
-    id: "opportunitiesforafricans", name: "Opportunities for Africans", region: "global",
-    homepage: "https://www.opportunitiesforafricans.com/", base: "https://www.opportunitiesforafricans.com",
-    categories: [46, 385, 7917], // Fellowships, Doctoral, Conference
-  }),
-  wordpressSource({
     id: "greatyop", name: "Greatyop", region: "global",
     homepage: "https://greatyop.com/", base: "https://greatyop.com",
     // English categories only (every post is duplicated in French):
     // Scholarships, Undergraduate, Masters, PhD, Conferences, Trainings
     categories: [104, 108, 112, 116, 350, 156],
   }),
+  wordpressSource({
+    id: "scholarshipscorner", name: "Scholarships Corner", region: "global",
+    homepage: "https://scholarshipscorner.website/", base: "https://www.scholarshipscorner.website",
+  }),
+  wordpressSource({
+    id: "scholarshipregion", name: "Scholarship Region", region: "global",
+    homepage: "https://www.scholarshipregion.com/", base: "https://www.scholarshipregion.com",
+  }),
+  wordpressSource({
+    id: "fullyscholarships", name: "Fully Scholarships", region: "global",
+    homepage: "https://fullyscholarships.com/", base: "https://fullyscholarships.com",
+  }),
+  wordpressSource({
+    id: "youthop", name: "Youth Opportunities", region: "global",
+    homepage: "https://www.youthop.com/", base: "https://www.youthop.com",
+    allFields: true, // custom API: keeps its deadline/category/region fields
+  }),
   // ---- Official
+
   erasmusSource,
   officialSource,
 ];
