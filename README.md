@@ -11,7 +11,7 @@ A Next.js (TypeScript) website that collects **bachelor's, master's and PhD scho
   | --- | --- | --- |
   | Palestinian | wenak.ps (scholarships listed for Palestinian students) | HTML (cheerio) |
   | Arabic | Persmind, StudyShoot, Dirasa Abroad | WordPress REST API |
-  | Global | Scholars4Dev, Opportunity Desk, Opportunities Corners, Greatyop, Scholarships Corner, Scholarship Region, Fully Scholarships, Montessori Line, Opportunities Circle, Scholarships Future, Scholarship Info Center, ScholarGlow, Scholarship Roar, Mladiinfo, Youth Opportunities | WordPress REST API (latest 100 posts each) |
+  | Global | Scholars4Dev, Opportunity Desk, Opportunities Corners, Greatyop, Scholarships Corner, Scholarship Region, Fully Scholarships, Montessori Line, Opportunities Circle, Scholarships Future, Scholarship Info Center, ScholarGlow, Scholarship Roar, Mladiinfo, Youth Opportunities | WordPress REST API (300 newest posts each) |
   | Official | Erasmus Mundus catalogue (EACEA) | HTML (cheerio) |
   | Annual | 22 major programmes that open every year, with their usual window (`src/lib/scrapers/official.ts`) | Curated list |
 - **Duplicates merged**: the same opportunity posted by several aggregators appears once, keeping the copy with a deadline and the fullest description.

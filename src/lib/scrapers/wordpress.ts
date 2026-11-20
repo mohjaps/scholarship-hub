@@ -37,8 +37,10 @@ export interface WordPressConfig {
   /** Only posts in these categories. Omit to take every post. */
   categories?: number[];
   categoriesExclude?: number[];
-  /** Posts to read per run (newest first). Max 100. */
+  /** Posts per API page (max 100). */
   perPage?: number;
+  /** Pages to read at most (newest first). Default 3. */
+  maxPages?: number;
   /**
    * Fetch full post bodies (better deadline/eligibility detection). Turn off
    * for sites whose bodies are huge or slow; the excerpt is used instead.
@@ -55,12 +57,20 @@ export function cleanExcerpt(html: string): string {
     .trim();
 }
 
-export function wpPostsUrl(cfg: WordPressConfig): string {
+/**
+ * Scholarships are often posted months before their deadline, so read several
+ * pages (300 newest posts), not just the latest page. Expired ones are hidden
+ * by deadline later. (A date filter would drop sites that rarely post.)
+ */
+const DEFAULT_MAX_PAGES = 3;
+
+export function wpPostsUrl(cfg: WordPressConfig, page = 1): string {
   const params = new URLSearchParams({
     per_page: String(cfg.perPage ?? 100),
     orderby: "date",
     order: "desc",
   });
+  if (page > 1) params.set("page", String(page));
   if (!cfg.allFields) {
     params.set("_fields", `id,link,date,date_gmt,title,excerpt,categories${cfg.withContent === false ? "" : ",content"}`);
   }
@@ -97,12 +107,24 @@ export function wordpressSource(cfg: WordPressConfig): Source {
     homepage: cfg.homepage,
     region: cfg.region,
     async fetch() {
-      const [posts, categories] = await Promise.all([
-        fetchJson<WpPost[]>(wpPostsUrl(cfg), 45_000),
+      const perPage = cfg.perPage ?? 100;
+      // Page 1 must succeed; later pages are best-effort (WP answers 400 past the last page).
+      const [first, categories] = await Promise.all([
+        fetchJson<WpPost[]>(wpPostsUrl(cfg, 1), 45_000),
         fetchJson<WpCategory[]>(`${cfg.base}/wp-json/wp/v2/categories?per_page=100&_fields=id,name`).catch(
           () => [] as WpCategory[],
         ),
       ]);
+      const more =
+        first.length < perPage
+          ? []
+          : await Promise.all(
+              Array.from({ length: (cfg.maxPages ?? DEFAULT_MAX_PAGES) - 1 }, (_, i) =>
+                fetchJson<WpPost[]>(wpPostsUrl(cfg, i + 2), 45_000).catch(() => [] as WpPost[]),
+              ),
+            );
+      const seen = new Set<string>();
+      const posts = [first, ...more].flat().filter((p) => !seen.has(String(p.id)) && !!seen.add(String(p.id)));
       const names = new Map(categories.map((c) => [c.id, decodeEntities(c.name)]));
       return posts.map((p) => wpPostToRaw(p, names, cfg.base));
     },

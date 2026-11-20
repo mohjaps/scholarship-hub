@@ -113,28 +113,37 @@ export interface ScrapeOutcome {
   results: SourceRunResult[];
 }
 
+/** Scrape one source; never throws (a failure is reported in the result). */
+export async function scrapeSource(
+  source: Source,
+  now = new Date(),
+): Promise<{ items: Opportunity[]; result: SourceRunResult }> {
+  const t0 = Date.now();
+  const scrapedAt = now.toISOString();
+  try {
+    const raws = await source.fetch();
+    const byId = new Map<string, Opportunity>();
+    for (const raw of raws) {
+      const item = normalize(raw, source, scrapedAt);
+      if (item && !byId.has(item.id)) byId.set(item.id, item);
+    }
+    const items = [...byId.values()];
+    return { items, result: { sourceId: source.id, ok: true, count: items.length, ms: Date.now() - t0 } };
+  } catch (e) {
+    const error = String(e instanceof Error ? e.message : e);
+    return { items: [], result: { sourceId: source.id, ok: false, count: 0, error, ms: Date.now() - t0 } };
+  }
+}
+
+/** Combine per-source results: drop cross-source id clashes, merge duplicates. */
+export function combine(parts: { items: Opportunity[] }[]): Opportunity[] {
+  const byId = new Map<string, Opportunity>();
+  for (const part of parts) for (const item of part.items) if (!byId.has(item.id)) byId.set(item.id, item);
+  return mergeDuplicates([...byId.values()]);
+}
+
 /** Run every source in parallel; one failing source never fails the run. */
 export async function scrapeAll(sources: Source[] = SOURCES, now = new Date()): Promise<ScrapeOutcome> {
-  const scrapedAt = now.toISOString();
-  const byId = new Map<string, Opportunity>();
-  const results = await Promise.all(
-    sources.map(async (source): Promise<SourceRunResult> => {
-      const t0 = Date.now();
-      try {
-        const raws = await source.fetch();
-        let count = 0;
-        for (const raw of raws) {
-          const item = normalize(raw, source, scrapedAt);
-          if (item && !byId.has(item.id)) {
-            byId.set(item.id, item);
-            count++;
-          }
-        }
-        return { sourceId: source.id, ok: true, count, ms: Date.now() - t0 };
-      } catch (e) {
-        return { sourceId: source.id, ok: false, count: 0, error: String(e instanceof Error ? e.message : e), ms: Date.now() - t0 };
-      }
-    }),
-  );
-  return { items: mergeDuplicates([...byId.values()]), results };
+  const parts = await Promise.all(sources.map((s) => scrapeSource(s, now)));
+  return { items: combine(parts), results: parts.map((p) => p.result) };
 }
