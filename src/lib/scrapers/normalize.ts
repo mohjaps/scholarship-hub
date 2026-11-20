@@ -85,3 +85,57 @@ export function normalize(
     scrapedAt,
   };
 }
+
+const DEDUPE_STOP = new Set(
+  (
+    "fully funded funded scholarship scholarships program programme programs programmes in for the of and to at a an " +
+    "with international students student apply now how full partially partial guide step by deadline deadlines open " +
+    "application applications no ielts required without free study paid"
+  ).split(" "),
+);
+
+/**
+ * Key that is equal for the same opportunity posted by different aggregators:
+ * the headline's significant words, ignoring years, order and SEO filler.
+ * "CERN Summer Student Program 2027 in Switzerland (Fully Funded)" and
+ * "CERN Summer Student Program 2027 in Switzerland | Paid" share a key.
+ */
+export function dedupeKey(title: string): string {
+  const head = title.toLowerCase().split(/\s+[|–—]\s+/)[0];
+  const words = (head.match(/[a-z0-9؀-ۿ]+/g) ?? []).filter((w) => !DEDUPE_STOP.has(w) && !/^20\d\d$/.test(w));
+  return [...new Set(words)].sort().join(" ");
+}
+
+const P_RANK = { explicit: 0, open: 1, unknown: 2 } as const;
+
+/** Merge copies of one opportunity: keep the most informative, combine signals. */
+export function mergeDuplicates(items: Opportunity[]): Opportunity[] {
+  const groups = new Map<string, Opportunity[]>();
+  const out: Opportunity[] = [];
+  for (const item of items) {
+    // Curated annual entries stay separate so the annual tab keeps them.
+    const key = item.sourceId === "official" ? "" : dedupeKey(item.title);
+    if (!key || key.split(" ").length < 2) {
+      out.push(item);
+      continue;
+    }
+    const g = groups.get(key);
+    if (g) g.push(item);
+    else groups.set(key, [item]);
+  }
+  for (const group of groups.values()) {
+    const best = [...group].sort(
+      (a, b) =>
+        Number(!!b.deadline) - Number(!!a.deadline) ||
+        Number(b.lang === "ar") - Number(a.lang === "ar") ||
+        b.summary.length - a.summary.length,
+    )[0];
+    const levels = [...new Set(group.flatMap((g) => g.levels))].sort(
+      (a, b) => ["bachelor", "master", "phd"].indexOf(a) - ["bachelor", "master", "phd"].indexOf(b),
+    );
+    const palestinian = group.map((g) => g.palestinian).sort((a, b) => P_RANK[a] - P_RANK[b])[0];
+    const funding = group.some((g) => g.funding === "full") ? "full" : group.some((g) => g.funding === "partial") ? "partial" : "unknown";
+    out.push({ ...best, levels, palestinian, funding });
+  }
+  return out;
+}

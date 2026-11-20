@@ -42,3 +42,30 @@ describe("normalize", () => {
     expect(canonicalUrl("https://a.org/x/?fbclid=1&id=2")).toBe("https://a.org/x/?id=2");
   });
 });
+
+import { dedupeKey, mergeDuplicates } from "@/lib/scrapers/normalize";
+import type { Opportunity } from "@/lib/types";
+
+describe("duplicates across aggregators", () => {
+  const base: Opportunity = {
+    id: "a", sourceId: "s1", sourceName: "S1", url: "https://a", title: "", summary: "", lang: "en",
+    kind: "scholarship", levels: [], funding: "unknown", palestinian: "unknown", deadline: null,
+    publishedAt: null, scrapedAt: "2026-11-19T00:00:00Z",
+  };
+  it("gives the same key to reworded copies", () => {
+    expect(dedupeKey("CERN Summer Student Program 2027 in Switzerland (Fully Funded)")).toBe(
+      dedupeKey("CERN Summer Student Program 2027 in Switzerland | Paid"),
+    );
+    expect(dedupeKey("University of Oulu Scholarship")).not.toBe(dedupeKey("University of Tokyo Scholarship"));
+  });
+  it("merges copies, keeping the dated one and combining signals", () => {
+    const merged = mergeDuplicates([
+      { ...base, id: "1", title: "CERN Summer Student Program 2027 (Fully Funded)", levels: ["bachelor"], palestinian: "open", funding: "full" },
+      { ...base, id: "2", sourceId: "s2", title: "CERN Summer Student Program 2027 | How to Apply", levels: ["master"], deadline: "2027-01-31" },
+      { ...base, id: "3", sourceId: "official", title: "CERN Summer Student Program" },
+    ]);
+    expect(merged).toHaveLength(2);
+    const m = merged.find((o) => o.sourceId !== "official")!;
+    expect(m).toMatchObject({ id: "2", deadline: "2027-01-31", levels: ["bachelor", "master"], palestinian: "open", funding: "full" });
+  });
+});

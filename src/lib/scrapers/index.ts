@@ -1,6 +1,6 @@
 import type { Opportunity, SourceRunResult } from "../types";
 import { erasmusSource } from "./erasmus";
-import { normalize } from "./normalize";
+import { mergeDuplicates, normalize } from "./normalize";
 import { officialSource } from "./official";
 import type { Source } from "./source";
 import { wenakSource } from "./wenak";
@@ -24,6 +24,10 @@ export const SOURCES: Source[] = [
     id: "studyshoot", name: "StudyShoot (ستادي شوت)", region: "arab",
     homepage: "https://studyshoot.com/", base: "https://studyshoot.com",
     categories: [6248], // المنح والقبول الجامعي
+  }),
+  wordpressSource({
+    id: "dirasaabroad", name: "Dirasa Abroad (دراسة بالخارج)", region: "arab",
+    homepage: "https://scholarship.dirasaabroad.com/", base: "https://scholarship.dirasaabroad.com",
   }),
   // ---- Global aggregators
   wordpressSource({
@@ -69,6 +73,31 @@ export const SOURCES: Source[] = [
     categories: [48, 73, 60, 71, 70], perPage: 100,
   }),
   wordpressSource({
+    id: "opportunitiescircle", name: "Opportunities Circle", region: "global",
+    homepage: "https://opportunitiescircle.com/", base: "https://opportunitiescircle.com",
+    withContent: false, // slow API; excerpts are enough
+  }),
+  wordpressSource({
+    id: "scholarshipsfuture", name: "Scholarships Future", region: "global",
+    homepage: "https://scholarshipsfuture.com/", base: "https://scholarshipsfuture.com",
+  }),
+  wordpressSource({
+    id: "scholarshipinfocenter", name: "Scholarship Info Center", region: "global",
+    homepage: "https://scholarshipinfocenter.com/", base: "https://scholarshipinfocenter.com",
+  }),
+  wordpressSource({
+    id: "scholarglow", name: "ScholarGlow", region: "global",
+    homepage: "https://scholarglow.com/", base: "https://scholarglow.com",
+  }),
+  wordpressSource({
+    id: "scholarshiproar", name: "Scholarship Roar", region: "global",
+    homepage: "https://scholarshiproar.com/", base: "https://scholarshiproar.com",
+  }),
+  wordpressSource({
+    id: "mladiinfo", name: "Mladiinfo", region: "global",
+    homepage: "https://www.mladiinfo.eu/", base: "https://www.mladiinfo.eu",
+  }),
+  wordpressSource({
     id: "youthop", name: "Youth Opportunities", region: "global",
     homepage: "https://www.youthop.com/", base: "https://www.youthop.com",
     allFields: true, // custom API: keeps its deadline/category/region fields
@@ -107,5 +136,5 @@ export async function scrapeAll(sources: Source[] = SOURCES, now = new Date()): 
       }
     }),
   );
-  return { items: [...byId.values()], results };
+  return { items: mergeDuplicates([...byId.values()]), results };
 }
